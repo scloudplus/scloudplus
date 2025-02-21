@@ -14,40 +14,7 @@ Complex complex_mul(Complex a, Complex b) {
 		a.real * b.imag + a.imag * b.real
 	};
 }
-Complex complex_div(Complex a, Complex b) {
-	// 手工计算分母（避免调用pow函数）
-	double denominator = b.real * b.real + b.imag * b.imag;
 
-	// 处理除零错误
-	if (denominator == 0.0) {
-		// 可扩展为返回错误码或特殊值
-		fprintf(stderr, "Division by zero!\n");
-		return (Complex){0, 0};
-	}
-
-	return (Complex){
-		(a.real * b.real + a.imag * b.imag) / denominator,
-		(a.imag * b.real - a.real * b.imag) / denominator
-	};
-}
-
-double complex_abs(Complex a) {
-	// 牛顿迭代法实现平方根
-	double val = a.real * a.real + a.imag * a.imag;
-	if (val == 0) return 0;
-
-	double x = val;
-	double last;
-	do {
-		last = x;
-		x = (x + val / x) / 2;
-	} while (x != last);
-
-	return x;
-}
-Complex complex_conj(Complex a) {
-	return (Complex){a.real, -a.imag};
-}
 double my_round(double x) {
 	// 分离整数和小数部分
 	double integer_part = (int)x;
