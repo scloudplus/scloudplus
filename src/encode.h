@@ -1,6 +1,13 @@
 #ifndef _SCLOUDPLUS_ENCODE_H_
 #define _SCLOUDPLUS_ENCODE_H_
 #include <stdint.h>
+#include <stdio.h>
+typedef struct
+{
+    double real;
+    double imag;
+} Complex;
+
 void scloudplus_msgencode(const uint8_t *msg, uint16_t *matrixM);
 void scloudplus_msgdecode(const uint16_t *matrixM, uint8_t *msg);
 void scloudplus_packsk(uint16_t *S, uint8_t *sk);
