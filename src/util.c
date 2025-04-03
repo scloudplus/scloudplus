@@ -1,4 +1,4 @@
-#include "util.h"
+#include "../include/util.h"
 
 /**
  * @brief Compares two byte arrays in constant time.

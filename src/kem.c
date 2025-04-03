@@ -1,9 +1,9 @@
-#include "kem.h"
-#include "pke.h"
-#include "param.h"
-#include "fips202.h"
-#include "util.h"
-#include "random.h"
+#include "../include/kem.h"
+#include "../include/pke.h"
+#include "../include/param.h"
+#include "../include/hash.h"
+#include "../include/util.h"
+#include "../include/random.h"
 #include <string.h>
 #include <stdlib.h>
 void scloud_kemkeygen(uint8_t *pk, uint8_t *sk)

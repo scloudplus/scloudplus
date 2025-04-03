@@ -1,15 +1,15 @@
-#include "ds_benchmark.h"
-#include "encode.h"
-#include "kem.h"
-#include "random.h"
-#include "param.h"
+#include "../include/ds_benchmark.h"
+#include "../include/encode.h"
+#include "../include/kem.h"
+#include "../include/random.h"
+#include "../include/param.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #define KEM_TEST_ITERATIONS 100
 #define KEM_BENCH_SECONDS 1
 #if (scloudplus_l == 128)
-#define SYSTEM_NAME "scloud plus 128"
+#define SYSTEM_NAME "scloudplus 128"
 #elif (scloudplus_l == 192)
 #define SYSTEM_NAME "scloud plus 192"
 #elif (scloudplus_l == 256)

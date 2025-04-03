@@ -3,7 +3,7 @@
  * domain "TweetFips202" implementation from https://twitter.com/tweetfips202 by
  * Gilles Van Assche, Daniel J. Bernstein, and Peter Schwabe */
 
-#include "fips202.h"
+#include "../include/hash.h"
 #include <stddef.h>
 #include <stdint.h>
 

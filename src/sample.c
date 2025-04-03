@@ -1,8 +1,14 @@
-#include "sample.h"
-#include "fips202.h"
-#include "aes.h"
+#include "../include/sample.h"
+#include "../include/hash.h"
+#include "../include/aes.h"
 #include <string.h>
-#include "config.h"
+#if defined(_WIN32) || defined(_WIN64)
+#define ALIGN_HEADER(N) __declspec(aligned(N))
+#define ALIGN_FOOTER(N)
+#else
+#define ALIGN_HEADER(N)
+#define ALIGN_FOOTER(N) __attribute__((aligned(N)))
+#endif
 // This code is based on the implementation of FrodoKEM
 void scloudplus_mul_add_as_e(const uint8_t *seedA, const uint16_t *S,
 							 const uint16_t *E, uint16_t *B)

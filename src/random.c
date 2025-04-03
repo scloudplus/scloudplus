@@ -1,96 +1,59 @@
-#include "random.h"
-#include <stdio.h>
-#include "config.h"
-#ifdef USE_OPENSSL
-#include <openssl/rand.h>
-int randombytes(
-	unsigned char *random_array,
-	unsigned int nbytes)
-{
-	return RAND_bytes(random_array, (int)nbytes);
-}
-#else
-#if defined(_WIN32) || defined(_WIN64)
-#define OS_WINDOWS
-#elif defined(__linux__)
-#define OS_LINUX
-#endif
-#ifdef OS_WINDOWS
-#include <Wincrypt.h>
-#include <Windows.h>
-
-int randombytes(unsigned char *buffer, unsigned int size)
-{
-	HCRYPTPROV prov = 0;
-
-	if (!CryptAcquireContext(&prov, NULL, NULL, PROV_RSA_FULL,
-							 CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
-	{
-		fprintf(stderr, "Error during CryptAcquireContext!\n");
-		return -1;
-	}
-
-	if (!CryptGenRandom(prov, (DWORD)size, buffer))
-	{
-		fprintf(stderr, "Error during CryptGenRandom!\n");
-		CryptReleaseContext(prov, 0);
-		return -1;
-	}
-
-	CryptReleaseContext(prov, 0);
-	return 0;
-}
-#endif
-
-#ifdef OS_LINUX
-
-#include <fcntl.h>
 #include <stdlib.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+
+#include <windows.h>
+#include <wincrypt.h>
+
+#else
+#include <fcntl.h>
 #include <unistd.h>
-
-static int lock = -1;
-
-static __inline void delay(unsigned int count)
-{
-	while (count--)
-	{
-	}
-}
-
-int randombytes(
-	unsigned char *random_array,
-	unsigned int nbytes)
-{ // Generation of "nbytes" of random values
-
-	int r, n = nbytes, count = 0;
-
-	if (lock == -1)
-	{
-		do
-		{
-			lock = open("/dev/urandom", O_RDONLY);
-			if (lock == -1)
-			{
-				delay(0xFFFFF);
-			}
-		} while (lock == -1);
-	}
-
-	while (n > 0)
-	{
-		do
-		{
-			r = read(lock, random_array + count, n);
-			if (r == -1)
-			{
-				delay(0xFFFF);
-			}
-		} while (r == -1);
-		count += r;
-		n -= r;
-	}
-
-	return 0;
-}
+#include <errno.h>
 #endif
+
+int randombytes(unsigned char *buffer, unsigned int size) {
+    if (buffer == NULL || size == 0) {
+        return -1;  // 无效参数
+    }
+
+#if defined(_WIN32) || defined(_WIN64)
+    /* Windows 实现 (兼容 MinGW/MSVC) */
+    HCRYPTPROV hCryptProv = 0;
+
+    // 获取加密服务提供程序句柄
+    if (!CryptAcquireContext(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        return -2;  // 获取上下文失败
+    }
+
+    // 生成随机数据
+    if (!CryptGenRandom(hCryptProv, size, buffer)) {
+        CryptReleaseContext(hCryptProv, 0);
+        return -3;  // 随机生成失败
+    }
+
+    // 释放上下文
+    CryptReleaseContext(hCryptProv, 0);
+    return 0;
+
+#else
+    /* UNIX-like 系统 (macOS/Linux) */
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd == -1) {
+        return -4;  // 打开设备失败
+    }
+
+    ssize_t bytes_read = 0;
+    while (bytes_read < (ssize_t)size) {
+        ssize_t result = read(fd, buffer + bytes_read, size - bytes_read);
+        if (result < 0) {
+            if (errno == EINTR) continue;  // 被信号中断则重试
+            close(fd);
+            return -5;  // 读取失败
+        }
+        bytes_read += result;
+    }
+
+    close(fd);
+    return 0;
 #endif
+}
