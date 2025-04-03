@@ -695,7 +695,7 @@ void scloudplus_compressc2(uint16_t *C, uint16_t *out)
     {
         uint32_t temp = ((((uint32_t)(C[i] & 0xFFF) << 10) + 2048) >> 12);
         remainder = ((((((uint32_t)(C[i] & 0xFFF) << 10)) % 2048) == 0) && ((temp & 1) == 0) && (C[i] != 0));
-        out[i] = (temp - remainder) & 0x7F;
+        out[i] = (temp - remainder) & 0x3FF;
     }
 #endif
 }
