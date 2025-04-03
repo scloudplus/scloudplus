@@ -687,14 +687,14 @@ void scloudplus_compressc2(uint16_t *C, uint16_t *out)
     for (int i = 0; i < scloudplus_mbar * scloudplus_nbar; i++)
     {
         uint32_t temp = ((((uint32_t)(C[i] & 0xFFF) << 7) + 2048) >> 12);
-        remainder = ((((((uint32_t)(C[i] & 0xFFF) << 7)) % 2048) == 0) && ((temp & 1) == 0) && (C[i] != 0));
+        remainder = (C[i]%64==48);
         out[i] = (temp - remainder) & 0x7F;
     }
 #elif (scloudplus_l == 192)
     for (int i = 0; i < scloudplus_mbar * scloudplus_nbar; i++)
     {
         uint32_t temp = ((((uint32_t)(C[i] & 0xFFF) << 10) + 2048) >> 12);
-        remainder = ((((((uint32_t)(C[i] & 0xFFF) << 10)) % 2048) == 0) && ((temp & 1) == 0) && (C[i] != 0));
+        remainder = (C[i]%8==6);
         out[i] = (temp - remainder) & 0x3FF;
     }
 #endif
