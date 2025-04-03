@@ -680,23 +680,23 @@ void scloudplus_decompressc1(uint16_t* in, uint16_t* C)
 #endif
 }
 
-void scloudplus_compressc2(uint16_t* C, uint16_t* out)
+void scloudplus_compressc2(uint16_t *C, uint16_t *out)
 {
     uint32_t temp, remainder;
 #if (scloudplus_l == 128 || scloudplus_l == 256)
     for (int i = 0; i < scloudplus_mbar * scloudplus_nbar; i++)
     {
-        temp = ((((uint32_t)(C[i] & 0xFFF) << 7) + 2048) >> 12);
-        remainder = (((uint32_t)(C[i] & 0xFFF) << 7) + 2048) % 6144;
-        out[i] = (temp - ((!remainder) && 1)) & 0x7F;
+        uint32_t temp = ((((uint32_t)(C[i] & 0xFFF) << 7) + 2048) >> 12);
+        remainder = ((((((uint32_t)(C[i] & 0xFFF) << 7)) % 2048) == 0) && ((temp & 1) == 0) && (C[i] != 0));
+        out[i] = (temp - remainder) & 0x7F;
     }
 #elif (scloudplus_l == 192)
-	for (int i = 0; i < scloudplus_mbar * scloudplus_nbar; i++)
-	{
-		temp = ((((uint32_t)(C[i] & 0xFFF) << 10) + 2048) >> 12);
-		remainder = (((uint32_t)(C[i] & 0xFFF) << 10) + 2048) % 6144;
-		out[i] = (temp - ((!remainder) && 1)) & 0x3FF;
-	}
+    for (int i = 0; i < scloudplus_mbar * scloudplus_nbar; i++)
+    {
+        uint32_t temp = ((((uint32_t)(C[i] & 0xFFF) << 10) + 2048) >> 12);
+        remainder = ((((((uint32_t)(C[i] & 0xFFF) << 10)) % 2048) == 0) && ((temp & 1) == 0) && (C[i] != 0));
+        out[i] = (temp - remainder) & 0x7F;
+    }
 #endif
 }
 
