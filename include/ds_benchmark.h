@@ -162,7 +162,7 @@ static inline uint64_t rdtsc() {
         double total_seconds = timer_to_seconds(0, _bench_total_time, _bench_timer_freq); \
         double avg_us = (total_seconds * 1e6) / _bench_iterations; \
         double avg_cycles = _bench_iterations ? (double)_bench_total_cycles / _bench_iterations : 0; \
-        printf("%-30s %12llu %15.6f %15.3f %15llu %15.0f\n", \
+        printf("%-30s %12lu %15.6f %15.3f %15lu %15.0f\n", \
                (op_name), _bench_iterations, total_seconds, avg_us, \
                _bench_total_cycles, avg_cycles); \
     } while (0)
