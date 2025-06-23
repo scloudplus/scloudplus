@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #define KEM_TEST_ITERATIONS 100
 #define KEM_BENCH_SECONDS 1
 #if (scloudplus_l == 128)
