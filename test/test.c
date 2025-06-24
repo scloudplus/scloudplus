@@ -6,14 +6,15 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #define KEM_TEST_ITERATIONS 100
 #define KEM_BENCH_SECONDS 1
 #if (scloudplus_l == 128)
 #define SYSTEM_NAME "scloudplus 128"
 #elif (scloudplus_l == 192)
-#define SYSTEM_NAME "scloud plus 192"
+#define SYSTEM_NAME "scloudplus 192"
 #elif (scloudplus_l == 256)
-#define SYSTEM_NAME "scloud plus 256"
+#define SYSTEM_NAME "scloudplus 256"
 #endif
 static int kem_test(const char *named_parameters, int iterations)
 {

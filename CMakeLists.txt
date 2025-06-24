@@ -4,9 +4,24 @@ project(scloudplus LANGUAGES C)
 # 设置项目版本
 set(PROJECT_VERSION 1.1.0)
 
-# 设置 C 标准
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
+add_compile_options(-O3)
+message(STATUS "Enabling O3 optimization")
+
+# 配置选项
+option(BUILD_WITH_CLANG "Use Clang compiler" OFF)
+option(BUILD_WITH_GCC "Use GCC compiler" ON)
+
+
+# 手动指定ARM架构标志
+if(ARM)  # 通过-DARM=ON传递
+    add_compile_options(-march=armv8-a+crypto)
+    add_definitions(-DARM)
+    message(STATUS "Building for ARM with crypto extensions")
+else()
+    add_compile_options(-maes -march=native)
+    add_definitions(-DAMD)
+    message(STATUS "Building for x86 with AES-NI")
+endif()
 
 # 默认使用Release构建类型（仅适用于单配置生成器）
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -14,19 +29,6 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose build type" FORCE)
     # 设置可用的构建类型选项
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-endif()
-
-# 配置选项
-option(BUILD_WITH_CLANG "Use Clang compiler" OFF)
-option(BUILD_WITH_GCC "Use GCC compiler" ON)
-
-# 设置全局优化标志
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    # 为Release模式设置-O3优化
-    add_compile_options(-O3)
-    message(STATUS "Enabling O3 optimization for Release build")
-else()
-    message(STATUS "Build type: ${CMAKE_BUILD_TYPE} - not enabling O3 optimization")
 endif()
 
 # 设置源文件和头文件
@@ -79,6 +81,7 @@ foreach(LEVEL 128 192 256)
 
     target_include_directories(scloudplus${LEVEL}_aes PRIVATE include)
     target_compile_definitions(scloudplus${LEVEL}_aes PRIVATE scloudplus_l=${LEVEL})
+
 endforeach()
 
 # 添加清理目标
