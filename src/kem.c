@@ -26,6 +26,7 @@ void scloud_kemencaps(uint8_t *pk, uint8_t *ctx, uint8_t *ss)
 	memcpy(kc, rk + 32, 32);
 	memcpy(kc + 32, ctx, scloudplus_ctx);
 	scloudplus_K(ss, scloudplus_ss, kc, scloudplus_ctx + 32);
+	free(kc);
 }
 void scloud_kemdecaps(uint8_t *sk, uint8_t *ctx, uint8_t *ss)
 {
@@ -39,4 +40,5 @@ void scloud_kemdecaps(uint8_t *sk, uint8_t *ctx, uint8_t *ss)
 	memcpy(ctx1 + 32, ctx, scloudplus_ctx);
 	scloudplus_cmov(ctx1, rk + 32, sk + scloudplus_kem_sk - 32, 32, bl);
 	scloudplus_K(ss, scloudplus_ss, ctx1, scloudplus_ctx + 32);
+	free(ctx1);
 }
