@@ -11,18 +11,6 @@ message(STATUS "Enabling O3 optimization")
 option(BUILD_WITH_CLANG "Use Clang compiler" OFF)
 option(BUILD_WITH_GCC "Use GCC compiler" ON)
 
-
-# 手动指定ARM架构标志
-if(ARM)  # 通过-DARM=ON传递
-    add_compile_options(-march=armv8-a+crypto)
-    add_definitions(-DARM)
-    message(STATUS "Building for ARM with crypto extensions")
-else()
-    add_compile_options(-maes -march=native)
-    add_definitions(-DAMD)
-    message(STATUS "Building for x86 with AES-NI")
-endif()
-
 # 默认使用Release构建类型（仅适用于单配置生成器）
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     message(STATUS "Setting build type to 'Release' as none was specified.")
