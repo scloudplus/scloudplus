@@ -1,0 +1,33 @@
+# local build and generated artifacts
+build/
+build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Testing/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.log
+.DS_Store
+
+# Python and local script caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# local scratch/tooling directories
+.codex
+.codex/
+tmp/
+
+# self-evaluation benchmark outputs are regenerated locally
+Self_Evaluation/results/bench_*/
+Self_Evaluation/results/latest_benchmark_dir.txt
+Self_Evaluation/results/latest_*_benchmark_dir.txt
+
+# local one-off compare summaries generated during analysis
+/aes-v11-frodo-compare.md

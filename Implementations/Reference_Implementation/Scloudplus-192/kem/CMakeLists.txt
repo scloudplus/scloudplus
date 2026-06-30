@@ -1,0 +1,172 @@
+cmake_minimum_required(VERSION 3.11.4)
+project(scloudplus_reference_kem C)
+
+# This CMakeLists.txt is intentionally self-contained for the submitted KEM
+# entry directory.  It does not include an external .cmake file: source
+# selection, compile definitions, and public test/KAT/benchmark targets are all
+# visible from this file.  The actual algorithm parameters are fixed in the
+# checked-in parameters.h next to this CMakeLists.txt.
+
+set(SCLOUDPLUS_TIER "Reference")
+get_filename_component(SCLOUDPLUS_LEVEL_PATH "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+get_filename_component(SCLOUDPLUS_LEVEL_DIR "${SCLOUDPLUS_LEVEL_PATH}" NAME)
+string(REGEX REPLACE "^Scloudplus-" "" SCLOUDPLUS_LEVEL "${SCLOUDPLUS_LEVEL_DIR}")
+set(SCLOUDPLUS_IMPLEMENTATIONS_DIR "${CMAKE_CURRENT_LIST_DIR}/../../..")
+set(SCLOUDPLUS_SHARED_DIR "${SCLOUDPLUS_IMPLEMENTATIONS_DIR}/_shared")
+set(SCLOUDPLUS_CORE_DIR "${SCLOUDPLUS_SHARED_DIR}/scloudplus_core")
+set(SCLOUDPLUS_API_PKC_DIR "${SCLOUDPLUS_SHARED_DIR}/api_pkc")
+set(SCLOUDPLUS_TEST_DIR "${SCLOUDPLUS_IMPLEMENTATIONS_DIR}/../Self_Evaluation/tests")
+set(SCLOUDPLUS_BENCH_DIR "${SCLOUDPLUS_IMPLEMENTATIONS_DIR}/../Self_Evaluation/benchmark")
+
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+set(SCLOUDPLUS_FAMILY "AES" CACHE STRING "Scloud+ primitive family: AES, SHAKE, or SM3")
+set_property(CACHE SCLOUDPLUS_FAMILY PROPERTY STRINGS AES SHAKE SM3)
+
+set(SCLOUDPLUS_BACKEND "REF" CACHE STRING "Scloud+ backend: REF")
+set_property(CACHE SCLOUDPLUS_BACKEND PROPERTY STRINGS REF)
+
+string(TOUPPER "${SCLOUDPLUS_FAMILY}" SCLOUDPLUS_FAMILY)
+string(TOUPPER "${SCLOUDPLUS_BACKEND}" SCLOUDPLUS_BACKEND)
+
+set(_valid_family AES SHAKE SM3)
+if(NOT SCLOUDPLUS_FAMILY IN_LIST _valid_family)
+  message(FATAL_ERROR "SCLOUDPLUS_FAMILY must be AES, SHAKE, or SM3")
+endif()
+
+if(NOT SCLOUDPLUS_BACKEND STREQUAL "REF")
+  message(FATAL_ERROR "Reference builds only support SCLOUDPLUS_BACKEND=REF")
+endif()
+
+
+set(SCLOUDPLUS_CORE_SOURCES "")
+set(SCLOUDPLUS_KAT_CORE_SOURCES "")
+set(SCLOUDPLUS_EXTRA_COMPILE_OPTIONS "")
+set(SCLOUDPLUS_EXTRA_COMPILE_DEFINITIONS
+  SCLOUDPLUS_FAMILY_${SCLOUDPLUS_FAMILY}
+)
+
+function(scloudplus_add_core_source relpath)
+  list(APPEND SCLOUDPLUS_CORE_SOURCES "${SCLOUDPLUS_CORE_DIR}/${relpath}")
+  if(NOT relpath STREQUAL "common/random.c")
+    list(APPEND SCLOUDPLUS_KAT_CORE_SOURCES "${SCLOUDPLUS_CORE_DIR}/${relpath}")
+  endif()
+  set(SCLOUDPLUS_CORE_SOURCES "${SCLOUDPLUS_CORE_SOURCES}" PARENT_SCOPE)
+  set(SCLOUDPLUS_KAT_CORE_SOURCES "${SCLOUDPLUS_KAT_CORE_SOURCES}" PARENT_SCOPE)
+endfunction()
+
+list(APPEND SCLOUDPLUS_EXTRA_COMPILE_DEFINITIONS
+    SCLOUDPLUS_TIER_REFERENCE
+    SCLOUDPLUS_REF_FAMILY_${SCLOUDPLUS_FAMILY}
+  )
+  if(SCLOUDPLUS_FAMILY STREQUAL "SM3")
+    set(SCLOUDPLUS_HASH_SOURCE common/hash_sm3_portable.c)
+    scloudplus_add_core_source(ref/sm3_reference.c)
+  else()
+    set(SCLOUDPLUS_HASH_SOURCE common/hash_aes_shake.c)
+    if(SCLOUDPLUS_FAMILY STREQUAL "AES")
+      scloudplus_add_core_source(ref/aes_reference.c)
+    endif()
+  endif()
+  set(SCLOUDPLUS_MATRIX_SOURCE ref/matrix_reference.c)
+  set(SCLOUDPLUS_PACK_SOURCE ref/pack_reference.c)
+
+foreach(relpath
+    common/encode.c
+    ${SCLOUDPLUS_HASH_SOURCE}
+    common/kem.c
+    ${SCLOUDPLUS_MATRIX_SOURCE}
+    ${SCLOUDPLUS_PACK_SOURCE}
+    common/pke.c
+    common/random.c
+    common/sample.c
+    common/util.c)
+  scloudplus_add_core_source(${relpath})
+endforeach()
+
+
+set(SCLOUDPLUS_INSTANCE_SUFFIX "")
+set(SCLOUDPLUS_CANONICAL_INSTANCE "Scloudplus-${SCLOUDPLUS_LEVEL}-${SCLOUDPLUS_FAMILY}-packed10")
+set(SCLOUDPLUS_SELECTED_INSTANCE "${SCLOUDPLUS_CANONICAL_INSTANCE}${SCLOUDPLUS_INSTANCE_SUFFIX}")
+message(STATUS "Configuring ${SCLOUDPLUS_TIER}/${SCLOUDPLUS_SELECTED_INSTANCE}")
+
+set(SCLOUDPLUS_KEM_INSTANCE_SOURCE "${CMAKE_CURRENT_LIST_DIR}/KEM_AlgorithmInstance.c")
+set(SCLOUDPLUS_TEST_SOURCE "${SCLOUDPLUS_TEST_DIR}/test_scloudplus.c")
+set(SCLOUDPLUS_KEM_LOOP_SOURCE "${SCLOUDPLUS_TEST_DIR}/test_kem_loop.c")
+set(SCLOUDPLUS_TAMPER_SOURCE "${SCLOUDPLUS_TEST_DIR}/test_tamper.c")
+set(SCLOUDPLUS_BENCHMARK_SOURCE "${SCLOUDPLUS_BENCH_DIR}/kem_benchmark.c")
+set(SCLOUDPLUS_KAT_RANDOM_SOURCE "${SCLOUDPLUS_API_PKC_DIR}/kat_random.c")
+set(SCLOUDPLUS_KAT_KEM_SOURCE "${SCLOUDPLUS_API_PKC_DIR}/KAT_KEM.c")
+set(SCLOUDPLUS_VERIFY_KAT_SOURCE "${SCLOUDPLUS_TEST_DIR}/verify_kat_kem.c")
+set(SCLOUDPLUS_DRNG_SOURCE "${SCLOUDPLUS_API_PKC_DIR}/drng.c")
+
+add_executable(test_scloudplus
+  ${SCLOUDPLUS_CORE_SOURCES}
+  ${SCLOUDPLUS_KEM_INSTANCE_SOURCE}
+  ${SCLOUDPLUS_TEST_SOURCE}
+)
+add_executable(kem_loop_scloudplus
+  ${SCLOUDPLUS_CORE_SOURCES}
+  ${SCLOUDPLUS_KEM_INSTANCE_SOURCE}
+  ${SCLOUDPLUS_KEM_LOOP_SOURCE}
+)
+add_executable(tamper_scloudplus
+  ${SCLOUDPLUS_CORE_SOURCES}
+  ${SCLOUDPLUS_KEM_INSTANCE_SOURCE}
+  ${SCLOUDPLUS_TAMPER_SOURCE}
+)
+add_executable(bench_scloudplus
+  ${SCLOUDPLUS_CORE_SOURCES}
+  ${SCLOUDPLUS_KEM_INSTANCE_SOURCE}
+  ${SCLOUDPLUS_BENCHMARK_SOURCE}
+)
+add_library(scloudplus_kem SHARED
+  ${SCLOUDPLUS_CORE_SOURCES}
+  ${SCLOUDPLUS_KEM_INSTANCE_SOURCE}
+)
+set_target_properties(scloudplus_kem PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+  OUTPUT_NAME "scloudplus_kem"
+)
+add_executable(kat_kem_scloudplus
+  ${SCLOUDPLUS_KAT_CORE_SOURCES}
+  ${SCLOUDPLUS_KAT_RANDOM_SOURCE}
+  ${SCLOUDPLUS_KEM_INSTANCE_SOURCE}
+  ${SCLOUDPLUS_KAT_KEM_SOURCE}
+  ${SCLOUDPLUS_DRNG_SOURCE}
+)
+add_executable(verify_kat_kem
+  ${SCLOUDPLUS_KAT_CORE_SOURCES}
+  ${SCLOUDPLUS_KAT_RANDOM_SOURCE}
+  ${SCLOUDPLUS_KEM_INSTANCE_SOURCE}
+  ${SCLOUDPLUS_VERIFY_KAT_SOURCE}
+  ${SCLOUDPLUS_DRNG_SOURCE}
+)
+
+foreach(target
+    test_scloudplus
+    kem_loop_scloudplus
+    tamper_scloudplus
+    bench_scloudplus
+    kat_kem_scloudplus
+    verify_kat_kem
+    scloudplus_kem)
+  target_include_directories(${target} PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${SCLOUDPLUS_CORE_DIR}/include
+    ${SCLOUDPLUS_CORE_DIR}/common
+    ${SCLOUDPLUS_API_PKC_DIR}
+  )
+  if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(${target} PRIVATE -std=c99 -Wall -Wextra -Wpedantic)
+    if(SCLOUDPLUS_EXTRA_COMPILE_OPTIONS)
+      target_compile_options(${target} PRIVATE ${SCLOUDPLUS_EXTRA_COMPILE_OPTIONS})
+    endif()
+  endif()
+  target_compile_definitions(${target} PRIVATE ${SCLOUDPLUS_EXTRA_COMPILE_DEFINITIONS})
+endforeach()
+target_compile_definitions(verify_kat_kem PRIVATE SCLOUDPLUS_KAT_INSTANCE_NAME=\"${SCLOUDPLUS_CANONICAL_INSTANCE}\")
